@@ -1,0 +1,42 @@
+{
+  "projects": [
+    {
+      "name": "E-Commerce Reimagined",
+      "description": "A full-scale ecommerce platform built with Next.js and Shopify integration, completely transforming their conversion rates.",
+      "imageUrl": "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80",
+      "projectLink": "https://example.com",
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "name": "AI CRM Dashboard",
+      "description": "An intelligent CRM system that leverages LangChain to automatically synthesize meeting transcripts and extract action items.",
+      "imageUrl": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80",
+      "projectLink": "https://example.com",
+      "createdAt": "2024-02-01T00:00:00Z"
+    }
+  ],
+  "teams": [
+    {
+      "name": "Siddhartha",
+      "role": "Founder & Lead Developer",
+      "imageUrl": "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&q=80"
+    },
+    {
+      "name": "Aria",
+      "role": "Lead UI/UX Designer",
+      "imageUrl": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80"
+    }
+  ],
+  "jobs": [
+    {
+      "title": "Senior Next.js Developer",
+      "type": "Full-Time",
+      "description": "Join our team to build high-performance web applications using Next.js 15, Turbopack, and TailwindCSS."
+    },
+    {
+      "title": "AI Automation Intern",
+      "type": "Internship",
+      "description": "Learn and deploy intelligent workflows using LangChain, OpenAI APIs, and custom Python backend systems."
+    }
+  ]
+}
