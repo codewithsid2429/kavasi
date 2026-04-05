@@ -80,8 +80,8 @@ export function Footer() {
         <div className="pt-8 border-t border-white/5 text-center flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-neutral-500 text-base">© {new Date().getFullYear()} KAVASI, Inc. All rights reserved.</p>
           <div className="flex gap-6 text-base text-neutral-500">
-            <Link href="#" className="hover:text-white transition-colors">Privacy policy</Link>
-            <Link href="#" className="hover:text-white transition-colors">Terms of service</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy policy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms of service</Link>
           </div>
         </div>
       </div>
