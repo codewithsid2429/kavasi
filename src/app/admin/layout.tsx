@@ -36,6 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <a href="/admin/portfolio" className="block text-neutral-400 hover:text-white">Portfolio</a>
           <a href="/admin/team" className="block text-neutral-400 hover:text-white">Team</a>
           <a href="/admin/careers" className="block text-neutral-400 hover:text-white">Careers</a>
+          <a href="/admin/contacts" className="block text-neutral-400 hover:text-white">Contacts</a>
           <a href="/admin/content" className="block text-neutral-400 hover:text-white">Content</a>
         </nav>
         <button 

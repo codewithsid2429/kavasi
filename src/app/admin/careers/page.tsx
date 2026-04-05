@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react';
 
 export default function AdminCareers() {
   const [jobs, setJobs] = useState([]);
+  const [applicants, setApplicants] = useState([]);
+  const [selectedJobFilter, setSelectedJobFilter] = useState('all');
   const [formData, setFormData] = useState({ title: '', type: 'Full-Time', description: '' });
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
   const fetchJobs = async () => {
     const res = await fetch('/api/careers');
@@ -13,26 +16,46 @@ export default function AdminCareers() {
     if(data.jobs) setJobs(data.jobs);
   };
 
+  const fetchApplicants = async (jobId: string) => {
+    const res = await fetch(`/api/careers/applicants?jobId=${jobId}`);
+    const data = await res.json();
+    if (data.applicants) setApplicants(data.applicants);
+  };
+
   useEffect(() => {
     fetchJobs();
+    fetchApplicants('all');
   }, []);
+
+  useEffect(() => {
+    fetchApplicants(selectedJobFilter);
+  }, [selectedJobFilter]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // In real app, posts to /api/careers
-    alert('Mock Mode: Cannot save to DB directly right now.');
+    setMessage('');
+    const res = await fetch('/api/careers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+    if (res.ok) {
+      setFormData({ title: '', type: 'Full-Time', description: '' });
+      setMessage('✅ Job posted successfully!');
+      fetchJobs();
+    } else {
+      setMessage('❌ Failed to post job. Check your DB connection.');
+    }
     setLoading(false);
   };
 
-  const handleDelete = (id: string) => {
-    alert(`Mock Mode: Delete triggered for task ID: ${id}`);
+  const handleDelete = async (id: number, title: string) => {
+    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+    const res = await fetch(`/api/careers/${id}`, { method: 'DELETE' });
+    if (res.ok) { fetchJobs(); }
+    else { alert('Failed to delete. Check your DB connection.'); }
   };
-
-  const mockApplicants = [
-    { _id: 'a1', name: 'Alex Johnson', email: 'alex@example.com', jobTitle: 'Senior Next.js Developer', portfolio: 'https://github.com/alex' },
-    { _id: 'a2', name: 'Maria Garcia', email: 'maria@example.com', jobTitle: 'AI Automation Intern', portfolio: 'https://maria.dev' }
-  ];
 
   return (
     <div>
@@ -65,18 +88,19 @@ export default function AdminCareers() {
                 {loading ? 'Posting...' : 'Post Job'}
               </button>
             </form>
+            {message && <p className="mt-4 text-sm font-semibold">{message}</p>}
           </div>
 
           <h2 className="text-xl font-bold mb-4">Active Postings</h2>
           <div className="grid grid-cols-1 gap-4">
             {jobs.map((j: any) => (
-              <div key={j._id} className="bg-neutral-900 border border-white/10 p-4 rounded-xl border-l-4 border-l-[#00D9FF] flex justify-between items-center">
+              <div key={j.id || j._id} className="bg-neutral-900 border border-white/10 p-4 rounded-xl border-l-4 border-l-[#00D9FF] flex justify-between items-center">
                 <div>
                   <h3 className="font-bold text-lg">{j.title} <span className="text-sm font-normal text-neutral-400 ml-2 border border-white/20 px-2 py-0.5 rounded-full">{j.type}</span></h3>
                   <p className="text-sm text-neutral-400 mt-1">{j.description}</p>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => handleDelete(j._id)} className="px-3 py-1 bg-red-500/20 text-red-500 rounded hover:bg-red-500/40 text-sm font-bold">Delete</button>
+                  <button onClick={() => handleDelete(j.id || j._id, j.title)} className="px-3 py-1 bg-red-500/20 text-red-500 rounded hover:bg-red-500/40 text-sm font-bold">Delete</button>
                 </div>
               </div>
             ))}
@@ -85,27 +109,45 @@ export default function AdminCareers() {
 
         {/* Right Column: Applicants */}
         <div>
-          <h2 className="text-xl font-bold mb-4">Recent Applicants</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Recent Applicants</h2>
+            <select 
+              value={selectedJobFilter} 
+              onChange={e => setSelectedJobFilter(e.target.value)} 
+              className="bg-black border border-white/20 rounded px-3 py-1.5 text-sm"
+            >
+              <option value="all">All Postings</option>
+              {jobs.map((j: any) => (
+                <option key={j.id} value={j.id}>{j.title}</option>
+              ))}
+            </select>
+          </div>
           <div className="bg-neutral-900/50 border border-white/10 p-6 rounded-2xl flex flex-col gap-4">
-            {mockApplicants.map((a) => (
-              <div key={a._id} className="bg-black border border-white/10 p-4 rounded-xl">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h3 className="font-bold text-white">{a.name}</h3>
-                    <p className="text-sm text-[#00D9FF]">{a.email}</p>
+            {applicants.length === 0 ? (
+              <p className="text-neutral-500 text-sm text-center py-8">No applicants found for this filter.</p>
+            ) : (
+              applicants.map((a: any) => (
+                <div key={a.id} className="bg-black border border-white/10 p-4 rounded-xl">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="font-bold text-white">{a.name}</h3>
+                      <div className="text-sm text-[#00D9FF]">
+                        <p>{a.email}</p>
+                        {a.mobile && <p className="text-xs text-neutral-400 mt-1">Mobile: {a.mobile}</p>}
+                      </div>
+                    </div>
+                    <span className="text-xs bg-neutral-800 px-2 py-1 rounded text-neutral-300 border border-white/10">
+                      Applied for: {a.jobTitle}
+                    </span>
                   </div>
-                  <span className="text-xs bg-neutral-800 px-2 py-1 rounded text-neutral-300">
-                    Applying for: {a.jobTitle}
-                  </span>
+                  {a.portfolio && (
+                    <a href={a.portfolio} target="_blank" rel="noopener noreferrer" className="text-sm border border-white/20 px-3 py-1.5 rounded-full hover:bg-white hover:text-black transition-colors inline-block mt-2">
+                      View Portfolio / Resume ↗
+                    </a>
+                  )}
                 </div>
-                <a href={a.portfolio} target="_blank" rel="noopener noreferrer" className="text-sm border border-white/20 px-3 py-1.5 rounded-full hover:bg-white hover:text-black transition-colors inline-block mt-2">
-                  View Portfolio / Resume ↗
-                </a>
-              </div>
-            ))}
-            <p className="text-neutral-500 text-sm text-center mt-4">
-              * Showing offline mock applicants. Once MongoDB is connected, new web forms will populate here.
-            </p>
+              ))
+            )}
           </div>
         </div>
       </div>

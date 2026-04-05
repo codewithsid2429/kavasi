@@ -36,7 +36,7 @@ export default function AboutPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {team.map((member) => (
-              <div key={member._id} className="bg-neutral-900 border border-white/10 rounded-3xl overflow-hidden hover:border-white/30 transition-all text-center pb-6">
+              <div key={member.id || member._id} className="bg-neutral-900 border border-white/10 rounded-3xl overflow-hidden hover:border-white/30 transition-all text-center pb-6">
                 <div className="h-64 w-full overflow-hidden mb-6 bg-neutral-800">
                   <img src={member.imageUrl} alt={member.name} className="w-full h-full object-cover object-top" />
                 </div>

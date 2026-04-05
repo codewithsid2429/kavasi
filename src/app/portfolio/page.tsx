@@ -33,7 +33,7 @@ export default function PortfolioPage() {
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {projects.map((p: any) => (
-            <div key={p._id} className="group relative bg-neutral-900 rounded-3xl overflow-hidden border border-white/10 hover:border-white/30 transition-all duration-300 hover:-translate-y-2">
+            <div key={p.id || p._id} className="group relative bg-neutral-900 rounded-3xl overflow-hidden border border-white/10 hover:border-white/30 transition-all duration-300 hover:-translate-y-2">
               <div className="h-64 overflow-hidden">
                 <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>

@@ -1,15 +1,31 @@
 import { NextResponse } from 'next/server';
-
-const MOCK_JOBS = [
-  { _id: '1', title: 'Senior Next.js Developer', type: 'Full-Time', description: 'Join our team to build high-performance web applications using Next.js 15, Turbopack, and TailwindCSS.' },
-  { _id: '2', title: 'AI Automation Intern', type: 'Internship', description: 'Learn and deploy intelligent workflows using LangChain, OpenAI APIs, and custom Python backend systems.' },
-];
+import { getDbConnection } from '@/lib/db';
 
 export async function GET() {
-  return NextResponse.json({ jobs: MOCK_JOBS }, { status: 200 });
+  try {
+    const db = getDbConnection();
+    const [jobs] = await db.query('SELECT * FROM Jobs ORDER BY created_at DESC');
+    return NextResponse.json({ jobs }, { status: 200 });
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
-  // Admin posting new job
-  return NextResponse.json({ error: 'Mock mode active. Cannot save to DB.' }, { status: 500 });
+  try {
+    const { title, type, description } = await req.json();
+    if (!title || !type || !description) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+    const db = getDbConnection();
+    const [result] = await db.execute(
+      'INSERT INTO Jobs (title, type, description) VALUES (?, ?, ?)',
+      [title, type, description]
+    );
+    return NextResponse.json({ success: true, jobId: (result as any).insertId }, { status: 201 });
+  } catch (error) {
+    console.error('Error posting job:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
 }
