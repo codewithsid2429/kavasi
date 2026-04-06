@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
-import { getDbConnection } from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(req: Request) {
   try {
@@ -15,8 +15,8 @@ export async function POST(req: Request) {
       port: Number(process.env.SMTP_PORT) || 587,
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
+        pass: process.env.SMTP_PASS,
+      },
     });
 
     const emailHtml = `
@@ -40,13 +40,15 @@ export async function POST(req: Request) {
       from: `"KAVASI" <${process.env.SMTP_USER}>`,
       to: email,
       subject: `Thank you for contacting KAVASI, ${name}!`,
-      html: emailHtml
+      html: emailHtml,
     });
 
-    // Mark contact as 'replied' in DB
+    // Mark contact as 'replied' in Supabase
     if (contactId) {
-      const db = getDbConnection();
-      await db.execute("UPDATE Contacts SET status = 'replied' WHERE id = ?", [contactId]);
+      await supabaseAdmin
+        .from('Contacts')
+        .update({ status: 'replied' })
+        .eq('id', contactId);
     }
 
     return NextResponse.json({ success: true }, { status: 200 });

@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
-import { getDbConnection } from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const db = getDbConnection();
-    const [contacts] = await db.query('SELECT * FROM Contacts ORDER BY created_at DESC');
+    const { data: contacts, error } = await supabaseAdmin
+      .from('Contacts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
     return NextResponse.json({ contacts }, { status: 200 });
   } catch (error) {
     console.error('Contacts GET error:', error);
@@ -21,16 +25,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Save to database FIRST
-    try {
-      const db = getDbConnection();
-      await db.execute(
-        'INSERT INTO Contacts (name, email, projectType, message) VALUES (?, ?, ?, ?)',
-        [name, email, projectType, message]
-      );
-    } catch (dbError) {
+    // Save to Supabase
+    const { error: dbError } = await supabaseAdmin
+      .from('Contacts')
+      .insert({ name, email, projectType, message });
+
+    if (dbError) {
       console.error('Failed to save contact to database', dbError);
-      // Still attempt email even if DB fails
     }
 
     // Send emails (optional, non-blocking)
@@ -40,11 +41,10 @@ export async function POST(req: Request) {
         port: Number(process.env.SMTP_PORT) || 587,
         auth: {
           user: process.env.SMTP_USER || 'ethereal_user',
-          pass: process.env.SMTP_PASS || 'ethereal_pass'
-        }
+          pass: process.env.SMTP_PASS || 'ethereal_pass',
+        },
       });
 
-      // 1. Admin notification email
       await transporter.sendMail({
         from: `"KAVASI Notifications" <${process.env.SMTP_USER || 'no-reply@kavasi.local'}>`,
         to: process.env.ADMIN_EMAIL || 'admin@kavasi.com',
@@ -55,10 +55,9 @@ export async function POST(req: Request) {
           <p><strong>Project Type:</strong> ${projectType}</p>
           <p><strong>Message:</strong></p>
           <p>${message}</p>
-        `
+        `,
       });
 
-      // 2. Auto-reply to the person who filled the form
       await transporter.sendMail({
         from: `"KAVASI" <${process.env.SMTP_USER || 'no-reply@kavasi.local'}>`,
         to: email,
@@ -82,10 +81,10 @@ export async function POST(req: Request) {
             </p>
             <p style="color: #ccc;">Warm regards,<br/><strong style="color:#fff">The KAVASI Team</strong></p>
           </div>
-        `
+        `,
       });
     } catch (emailError) {
-      console.warn("Email not sent (SMTP not configured). Contact was saved to DB.", emailError);
+      console.warn('Email not sent (SMTP not configured). Contact was saved to DB.', emailError);
     }
 
     return NextResponse.json({ success: true }, { status: 201 });

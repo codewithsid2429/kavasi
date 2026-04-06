@@ -63,8 +63,21 @@ export default function AdminTeam() {
             <input required type="text" value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} className="w-full bg-black border border-white/20 rounded px-4 py-2" />
           </div>
           <div>
-            <label className="block text-sm mb-1">Display Order <span className="text-neutral-500">(1 = first, 2 = second… higher number = appears later)</span></label>
-            <input required type="number" min={1} placeholder="e.g. 5" value={formData.display_order} onChange={e => setFormData({...formData, display_order: e.target.value})} className="w-full bg-black border border-white/20 rounded px-4 py-2" />
+            <label className="block text-sm mb-1">
+              Display Order
+              <span className="text-neutral-500 ml-1">
+                (1 = first on page · you currently have {team.length} member{team.length !== 1 ? 's' : ''} — enter {team.length + 1} to add at the end)
+              </span>
+            </label>
+            <input
+              required
+              type="number"
+              min={1}
+              placeholder={`e.g. ${team.length + 1} (position ${team.length + 1} – after all current members)`}
+              value={formData.display_order}
+              onChange={e => setFormData({...formData, display_order: e.target.value})}
+              className="w-full bg-black border border-white/20 rounded px-4 py-2 placeholder:text-neutral-600"
+            />
           </div>
           <button disabled={loading} type="submit" className="px-6 py-2 bg-gradient-to-r from-[#00D9FF] to-[#6C63FF] text-black font-semibold rounded hover:scale-105 transition-all shadow-[0_0_15px_#00D9FF]">
             {loading ? 'Adding...' : 'Add Member'}

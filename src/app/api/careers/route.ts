@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getDbConnection } from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const db = getDbConnection();
-    const [jobs] = await db.query('SELECT * FROM Jobs ORDER BY created_at DESC');
+    const { data: jobs, error } = await supabaseAdmin
+      .from('Jobs')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
     return NextResponse.json({ jobs }, { status: 200 });
   } catch (error) {
     console.error('Error fetching jobs:', error);
@@ -18,12 +22,15 @@ export async function POST(req: Request) {
     if (!title || !type || !description) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-    const db = getDbConnection();
-    const [result] = await db.execute(
-      'INSERT INTO Jobs (title, type, description) VALUES (?, ?, ?)',
-      [title, type, description]
-    );
-    return NextResponse.json({ success: true, jobId: (result as any).insertId }, { status: 201 });
+
+    const { data, error } = await supabaseAdmin
+      .from('Jobs')
+      .insert({ title, type, description })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+    return NextResponse.json({ success: true, jobId: data.id }, { status: 201 });
   } catch (error) {
     console.error('Error posting job:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

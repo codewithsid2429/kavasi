@@ -1,29 +1,31 @@
 import { NextResponse } from 'next/server';
-import { getDbConnection } from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const jobId = url.searchParams.get('jobId');
 
-    const db = getDbConnection();
-    let query = `
-      SELECT a.*, j.title as jobTitle 
-      FROM Applicants a 
-      JOIN Jobs j ON a.job_id = j.id
-    `;
-    let params: any[] = [];
+    let query = supabaseAdmin
+      .from('Applicants')
+      .select('*, Jobs(title)')
+      .order('created_at', { ascending: false });
 
     if (jobId && jobId !== 'all') {
-      query += ' WHERE a.job_id = ?';
-      params.push(jobId);
+      query = query.eq('job_id', jobId) as typeof query;
     }
 
-    query += ' ORDER BY a.created_at DESC';
+    const { data: applicants, error } = await query;
+    if (error) throw error;
 
-    const [applicants] = await db.execute(query, params);
+    // Flatten Jobs.title → jobTitle to match old API shape
+    const shaped = (applicants ?? []).map((a: any) => ({
+      ...a,
+      jobTitle: a.Jobs?.title ?? '',
+      Jobs: undefined,
+    }));
 
-    return NextResponse.json({ applicants }, { status: 200 });
+    return NextResponse.json({ applicants: shaped }, { status: 200 });
   } catch (error) {
     console.error('Error fetching applicants:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
